@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOC Shield – Cybersecurity Incident Response Database</title>
+  <meta name="description" content="SOC Shield is a Security Operations Center incident management system with SQL-based Role-Based Access Control." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- Chart.js for dashboard charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ─── LOGIN PAGE ──────────────────────────────────────────────────────── -->
+<div id="login-page" class="page active">
+  <div class="login-bg">
+    <div class="login-grid"></div>
+    <div class="login-glow glow-1"></div>
+    <div class="login-glow glow-2"></div>
+  </div>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="shield-icon">🛡️</div>
+        <h1>SOC <span class="accent">Shield</span></h1>
+        <p class="login-subtitle">Cybersecurity Incident Response Database</p>
+      </div>
+
+      <div class="demo-accounts">
+        <p class="demo-label">⚡ Quick Demo Login</p>
+        <div class="demo-grid">
+          <button class="demo-btn" onclick="quickLogin('admin@soc.com','admin123')">
+            <span class="demo-role">Admin</span>
+            <span class="demo-email">admin@soc.com</span>
+          </button>
+          <button class="demo-btn" onclick="quickLogin('manager@soc.com','manager123')">
+            <span class="demo-role">Manager</span>
+            <span class="demo-email">manager@soc.com</span>
+          </button>
+          <button class="demo-btn" onclick="quickLogin('analyst@soc.com','analyst123')">
+            <span class="demo-role">Analyst</span>
+            <span class="demo-email">analyst@soc.com</span>
+          </button>
+          <button class="demo-btn" onclick="quickLogin('auditor@soc.com','auditor123')">
+            <span class="demo-role">Auditor</span>
+            <span class="demo-email">auditor@soc.com</span>
+          </button>
+        </div>
+      </div>
+
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="login-email">Email Address</label>
+          <div class="input-wrapper">
+            <span class="input-icon">✉</span>
+            <input type="email" id="login-email" placeholder="Enter your email" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔑</span>
+            <input type="password" id="login-password" placeholder="Enter your password" required />
+          </div>
+        </div>
+        <div id="login-error" class="error-msg hidden"></div>
+        <button type="submit" class="btn-primary btn-full" id="login-btn">
+          <span id="login-btn-text">🔐 Secure Login</span>
+        </button>
+      </form>
+
+      <div class="login-footer">
+        <p>🔒 SQL Role-Based Access Control • AES-256 Sessions</p>
+        <p>DBMS Mini Project — SOC Shield v1.0</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MAIN APP ─────────────────────────────────────────────────────────── -->
+<div id="app-page" class="page hidden">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <span class="logo-icon">🛡️</span>
+        <span class="logo-text">SOC <span class="accent">Shield</span></span>
+      </div>
+      <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">☰</button>
+    </div>
+
+    <div class="user-badge">
+      <div class="user-avatar" id="sidebar-avatar">A</div>
+      <div class="user-info">
+        <span class="user-name" id="sidebar-name">User</span>
+        <span class="user-role-badge" id="sidebar-role">Role</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-label">OVERVIEW</span>
+        <a href="#" class="nav-item active" onclick="navigateTo('dashboard')" id="nav-dashboard">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Dashboard</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-label">OPERATIONS</span>
+        <a href="#" class="nav-item" onclick="navigateTo('incidents')" id="nav-incidents">
+          <span class="nav-icon">⚠️</span>
+          <span class="nav-text">Incidents</span>
+          <span class="nav-badge" id="incident-badge"></span>
+        </a>
+        <a href="#" class="nav-item" onclick="navigateTo('reports')" id="nav-reports">
+          <span class="nav-icon">📋</span>
+          <span class="nav-text">Threat Reports</span>
+        </a>
+        <a href="#" class="nav-item" onclick="navigateTo('systems')" id="nav-systems">
+          <span class="nav-icon">🖥️</span>
+          <span class="nav-text">Systems</span>
+        </a>
+      </div>
+
+      <div class="nav-section" id="admin-nav-section">
+        <span class="nav-label">ADMINISTRATION</span>
+        <a href="#" class="nav-item" onclick="navigateTo('users')" id="nav-users">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">User Management</span>
+        </a>
+        <a href="#" class="nav-item" onclick="navigateTo('rbac')" id="nav-rbac">
+          <span class="nav-icon">🔐</span>
+          <span class="nav-text">RBAC Permissions</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-label">SECURITY</span>
+        <a href="#" class="nav-item" onclick="navigateTo('logs')" id="nav-logs">
+          <span class="nav-icon">📜</span>
+          <span class="nav-text">Audit Logs</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="handleLogout()">
+        <span>🚪</span> <span class="nav-text">Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h2 class="page-title" id="page-title">Dashboard</h2>
+        <div class="breadcrumb" id="breadcrumb">SOC Shield / Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <div class="threat-level">
+          <span class="threat-dot critical-dot"></span>
+          <span>DEFCON 3</span>
+        </div>
+        <div class="topbar-time" id="topbar-time"></div>
+        <div class="topbar-user" onclick="navigateTo('logs')">
+          <div class="topbar-avatar" id="topbar-avatar">A</div>
+          <span id="topbar-name">User</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- PAGE VIEWS -->
+    <div class="content-area">
+
+      <!-- ── DASHBOARD ─────────────────────────────────────────────────── -->
+      <section id="view-dashboard" class="view active">
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card stat-total">
+            <div class="stat-icon">📁</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-total">—</div>
+              <div class="stat-label">Total Incidents</div>
+            </div>
+            <div class="stat-trend">↑ All time</div>
+          </div>
+          <div class="stat-card stat-open">
+            <div class="stat-icon">🔴</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-open">—</div>
+              <div class="stat-label">Open Incidents</div>
+            </div>
+            <div class="stat-trend">Needs attention</div>
+          </div>
+          <div class="stat-card stat-critical">
+            <div class="stat-icon">💥</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-critical">—</div>
+              <div class="stat-label">Critical Severity</div>
+            </div>
+            <div class="stat-trend">High priority</div>
+          </div>
+          <div class="stat-card stat-resolved">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-resolved">—</div>
+              <div class="stat-label">Resolved</div>
+            </div>
+            <div class="stat-trend">Success rate</div>
+          </div>
+        </div>
+
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="card-header"><h3>Incidents by Severity</h3></div>
+            <div class="chart-wrapper"><canvas id="severityChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="card-header"><h3>Incidents by Status</h3></div>
+            <div class="chart-wrapper"><canvas id="statusChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="recent-table-card">
+          <div class="card-header">
+            <h3>🚨 Recent Incidents</h3>
+            <button class="btn-sm" onclick="navigateTo('incidents')">View All →</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Reporter</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="recent-incidents-body">
+              <tr><td colspan="6" class="loading-cell">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── INCIDENTS ─────────────────────────────────────────────────── -->
+      <section id="view-incidents" class="view hidden">
+        <div class="view-header">
+          <div class="view-filters">
+            <select id="filter-severity" onchange="loadIncidents()" class="filter-select">
+              <option value="">All Severities</option>
+              <option value="Critical">Critical</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+            <select id="filter-status" onchange="loadIncidents()" class="filter-select">
+              <option value="">All Statuses</option>
+              <option value="Open">Open</option>
+              <option value="Investigating">Investigating</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Closed">Closed</option>
+            </select>
+          </div>
+          <button class="btn-primary" id="btn-create-incident" onclick="openIncidentModal()">+ New Incident</button>
+        </div>
+
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Assigned To</th>
+                <th>Vector</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="incidents-body">
+              <tr><td colspan="8" class="loading-cell">Loading incidents...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── THREAT REPORTS ────────────────────────────────────────────── -->
+      <section id="view-reports" class="view hidden">
+        <div class="view-header">
+          <div></div>
+          <button class="btn-primary" id="btn-create-report" onclick="openReportModal()">+ Submit Report</button>
+        </div>
+        <div class="reports-grid" id="reports-grid">
+          <div class="loading-cell">Loading reports...</div>
+        </div>
+      </section>
+
+      <!-- ── SYSTEMS ───────────────────────────────────────────────────── -->
+      <section id="view-systems" class="view hidden">
+        <div class="view-header">
+          <div></div>
+          <button class="btn-primary" id="btn-create-system" onclick="openSystemModal()" style="display:none">+ Add System</button>
+        </div>
+        <div class="systems-grid" id="systems-grid">
+          <div class="loading-cell">Loading systems...</div>
+        </div>
+      </section>
+
+      <!-- ── USERS ─────────────────────────────────────────────────────── -->
+      <section id="view-users" class="view hidden">
+        <div class="view-header">
+          <div></div>
+          <button class="btn-primary" onclick="openUserModal()">+ Create User</button>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Last Login</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-body">
+              <tr><td colspan="7" class="loading-cell">Loading users...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── RBAC PERMISSIONS ──────────────────────────────────────────── -->
+      <section id="view-rbac" class="view hidden">
+        <div class="rbac-intro">
+          <div class="rbac-sql-box">
+            <div class="sql-header">
+              <span class="sql-label">SQL</span>
+              <span>RBAC Grant Statements</span>
+            </div>
+            <pre class="sql-code" id="rbac-sql-preview">-- Loading permissions...</pre>
+          </div>
+        </div>
+        <div class="rbac-grid" id="rbac-grid">
+          <div class="loading-cell">Loading permissions...</div>
+        </div>
+      </section>
+
+      <!-- ── AUDIT LOGS ────────────────────────────────────────────────── -->
+      <section id="view-logs" class="view hidden">
+        <div class="view-header">
+          <div class="view-filters">
+            <select id="log-filter-status" onchange="loadLogs()" class="filter-select">
+              <option value="">All Statuses</option>
+              <option value="Success">Success</option>
+              <option value="Denied">Access Denied</option>
+              <option value="Warning">Warning</option>
+            </select>
+          </div>
+          <div class="log-stats" id="log-stats-bar"></div>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Resource</th>
+                <th>Status</th>
+                <th>IP Address</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="logs-body">
+              <tr><td colspan="7" class="loading-cell">Loading logs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="logs-pagination"></div>
+      </section>
+
+    </div><!-- .content-area -->
+  </main>
+</div><!-- #app-page -->
+
+<!-- ─── MODALS ───────────────────────────────────────────────────────────── -->
+
+<!-- Incident Modal -->
+<div id="modal-incident" class="modal hidden">
+  <div class="modal-backdrop" onclick="closeModal('modal-incident')"></div>
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 id="incident-modal-title">Create Incident</h3>
+      <button class="modal-close" onclick="closeModal('modal-incident')">✕</button>
+    </div>
+    <form id="incident-form" onsubmit="submitIncident(event)">
+      <div class="modal-body">
+        <input type="hidden" id="incident-id" />
+        <div class="form-row">
+          <div class="form-group">
+            <label>Title *</label>
+            <input type="text" id="inc-title" required placeholder="Incident title..." />
+          </div>
+          <div class="form-group form-group-sm">
+            <label>Severity *</label>
+            <select id="inc-severity" required>
+              <option value="Low">Low</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea id="inc-description" rows="4" required placeholder="Describe the incident..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Affected System</label>
+            <input type="text" id="inc-system" placeholder="e.g., Web Server Alpha" />
+          </div>
+          <div class="form-group">
+            <label>Attack Vector</label>
+            <input type="text" id="inc-vector" placeholder="e.g., Phishing, DDoS" />
+          </div>
+        </div>
+        <div class="form-row" id="assign-row">
+          <div class="form-group">
+            <label>Assign To Analyst</label>
+            <select id="inc-assigned">
+              <option value="">— Unassigned —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="inc-status">
+              <option value="Open">Open</option>
+              <option value="Investigating">Investigating</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Closed">Closed</option>
+            </select>
+          </div>
+        </div>
+        <div id="incident-form-error" class="error-msg hidden"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeModal('modal-incident')">Cancel</button>
+        <button type="submit" class="btn-primary" id="incident-submit-btn">Create Incident</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Incident Detail Modal -->
+<div id="modal-incident-detail" class="modal hidden">
+  <div class="modal-backdrop" onclick="closeModal('modal-incident-detail')"></div>
+  <div class="modal-dialog modal-wide">
+    <div class="modal-header">
+      <h3>Incident Details</h3>
+      <button class="modal-close" onclick="closeModal('modal-incident-detail')">✕</button>
+    </div>
+    <div class="modal-body" id="incident-detail-body">Loading...</div>
+  </div>
+</div>
+
+<!-- Report Modal -->
+<div id="modal-report" class="modal hidden">
+  <div class="modal-backdrop" onclick="closeModal('modal-report')"></div>
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3>Submit Threat Report</h3>
+      <button class="modal-close" onclick="closeModal('modal-report')">✕</button>
+    </div>
+    <form id="report-form" onsubmit="submitReport(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Incident *</label>
+          <select id="rep-incident" required>
+            <option value="">Select incident...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Report Summary *</label>
+          <textarea id="rep-text" rows="4" required placeholder="Provide investigation summary..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Findings</label>
+          <textarea id="rep-findings" rows="3" placeholder="Key findings and observations..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Recommendations</label>
+          <textarea id="rep-recommendations" rows="3" placeholder="Remediation steps..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>IOC Data (Indicators of Compromise)</label>
+          <input type="text" id="rep-ioc" placeholder="IPs, hashes, domains..." />
+        </div>
+        <div id="report-form-error" class="error-msg hidden"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeModal('modal-report')">Cancel</button>
+        <button type="submit" class="btn-primary">Submit Report</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- User Modal -->
+<div id="modal-user" class="modal hidden">
+  <div class="modal-backdrop" onclick="closeModal('modal-user')"></div>
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 id="user-modal-title">Create User</h3>
+      <button class="modal-close" onclick="closeModal('modal-user')">✕</button>
+    </div>
+    <form id="user-form" onsubmit="submitUser(event)">
+      <div class="modal-body">
+        <input type="hidden" id="user-id" />
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="user-name" required placeholder="John Doe" />
+          </div>
+          <div class="form-group">
+            <label>Role *</label>
+            <select id="user-role" required>
+              <option value="">Select role...</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="user-email" required placeholder="user@soc.com" />
+        </div>
+        <div class="form-group">
+          <label>Password *</label>
+          <input type="password" id="user-password" placeholder="Min 6 characters" />
+        </div>
+        <div id="user-form-error" class="error-msg hidden"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeModal('modal-user')">Cancel</button>
+        <button type="submit" class="btn-primary" id="user-submit-btn">Create User</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- System Modal -->
+<div id="modal-system" class="modal hidden">
+  <div class="modal-backdrop" onclick="closeModal('modal-system')"></div>
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3>Add System</h3>
+      <button class="modal-close" onclick="closeModal('modal-system')">✕</button>
+    </div>
+    <form id="system-form" onsubmit="submitSystem(event)">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>System Name *</label>
+            <input type="text" id="sys-name" required placeholder="Web Server Alpha" />
+          </div>
+          <div class="form-group">
+            <label>IP Address *</label>
+            <input type="text" id="sys-ip" required placeholder="192.168.1.10" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Owner</label>
+            <input type="text" id="sys-owner" placeholder="IT Dept" />
+          </div>
+          <div class="form-group">
+            <label>OS Type</label>
+            <input type="text" id="sys-os" placeholder="Ubuntu 22.04" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" id="sys-location" placeholder="DMZ" />
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="sys-status">
+              <option value="Online">Online</option>
+              <option value="Offline">Offline</option>
+              <option value="Compromised">Compromised</option>
+              <option value="Under Maintenance">Under Maintenance</option>
+            </select>
+          </div>
+        </div>
+        <div id="system-form-error" class="error-msg hidden"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeModal('modal-system')">Cancel</button>
+        <button type="submit" class="btn-primary">Add System</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast hidden">
+  <span id="toast-icon">✅</span>
+  <span id="toast-msg">Message here</span>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
