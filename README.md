@@ -181,10 +181,4 @@ soc-shield/
 
 ---
 
-## � License
-
-MIT — Free to use for educational purposes.
-
----
-
 *Made for DBMS Mini Project — SQL Role-Based Access Control & Database Security*
