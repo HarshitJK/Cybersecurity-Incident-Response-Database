@@ -95,8 +95,8 @@ When a role lacks permission, the server returns a structured **Access Denied** 
 
 ### 1. Clone the repo
 ```bash
-git clone https://github.com/YOUR_USERNAME/soc-shield.git
-cd soc-shield
+git clone https://github.com/HarshitJK/Cybersecurity-Incident-Response-Database.git
+cd Cybersecurity-Incident-Response-Database
 ```
 
 ### 2. Configure environment
